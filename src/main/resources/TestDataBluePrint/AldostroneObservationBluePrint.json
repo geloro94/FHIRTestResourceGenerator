@@ -1,0 +1,11 @@
+{
+  "Observation.identifier.value": "randomIdentifierCodeValue()",
+  "Observation.identifier.system": "randomIdentifierSystemURI()",
+  "Observation.identifier.assigner": "randomOrganizationReference()",
+  "Observation.identifier.type.coding": "fixedCoding(http://terminology.hl7.org/CodeSystem/v2-0203, OBI, None, None)",
+  "Observation.category.coding": "fixedCoding(http://terminology.hl7.org/CodeSystem/observation-category, laboratory, None, None)",
+  "Observation.code.coding": "fixedCoding(http://loinc.org, 1763-2, None, None)",
+  "Observation.subject": "randomPatientReference()",
+  "Observation.effective": "randomDateTime()",
+  "Observation.value as Quantity": "randomQuantity(None, None, http://unitsofmeasure.org, ng/dL, None))"
+}

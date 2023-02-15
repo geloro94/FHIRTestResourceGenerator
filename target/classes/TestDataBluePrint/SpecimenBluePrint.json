@@ -1,0 +1,6 @@
+{
+  "Specimen.status": "randomCode(http://hl7.org/fhir/ValueSet/specimen-status|4.0.1)",
+  "Specimen.type.coding": "randomCoding(https://www.medizininformatik-initiative.de/fhir/fdpg/ValueSet/TopXSpecimenCodes)",
+  "Specimen.subject": "randomPatientReference()",
+  "Specimen.collection.collected": "randomDateTime()"
+}

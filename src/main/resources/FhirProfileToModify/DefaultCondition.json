@@ -1,0 +1,16 @@
+{
+  "resourceType": "Condition",
+  "code": {
+    "coding": [
+      {
+        "system": "http://snomed.info/sct",
+        "code": "195967001",
+        "display": "Hypertension"
+      }
+    ]
+  },
+  "subject": {
+    "reference": "Patient/1234"
+  },
+  "recordedDate": "2023-02-15T08:30:00Z"
+}

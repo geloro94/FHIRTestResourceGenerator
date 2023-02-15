@@ -1,0 +1,5 @@
+{
+  "Condition.code.coding": "randomCoding(http://fhir.de/ValueSet/bfarm/icd-10-gm)",
+  "Condition.subject": "randomPatientReference()",
+  "Condition.recordedDate": "randomDateTime()"
+}
