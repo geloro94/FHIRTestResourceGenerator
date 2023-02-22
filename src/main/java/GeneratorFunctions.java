@@ -110,9 +110,16 @@ public class GeneratorFunctions {
    * @return the expansion contains of the value set
    */
   public static List<ValueSetExpansionContainsComponent> getValueSet(String valueSetUrl) {
+    var version = "";
+    if(valueSetUrl.contains("|")) {
+      version = valueSetUrl.split("\\|")[1];
+      valueSetUrl = valueSetUrl.split("\\|")[0];
+    }
     ValueSetExpansionComponent expansion = CLIENT.operation().onType(ValueSet.class)
         .named("$expand")
-        .withParameter(Parameters.class, "url", new StringType(valueSetUrl)).useHttpGet()
+        .withParameter(Parameters.class, "url", new StringType(valueSetUrl))
+        .andParameter("version", new StringType(version))
+        .useHttpGet()
         .returnResourceType(ValueSet.class)
         .execute().getExpansion();
     return expansion.getContains();

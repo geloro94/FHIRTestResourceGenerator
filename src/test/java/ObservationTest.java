@@ -1,9 +1,9 @@
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ca.uhn.fhir.context.FhirContext;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,12 +47,13 @@ public class ObservationTest {
         Files.readAllBytes(
             Paths.get("src/main/resources/FhirProfileToModify/DefaultQuantityObservation.json")));
     var defaultObservation = parser.parseResource(Observation.class, json);
-    var observation = parser.parseResource(Observation.class, json);
 
-    var fhirPathToValueFunction = FhirResourceFactory.loadFhirPathToValueFunctionFromJson(
+    var fhirPathToValueFunction = BluePrintLoader.loadFhirPathToValueFunctionFromJson(
         Path.of("src/main/resources/TestDataBluePrint/AldostroneObservationBluePrint.json"));
 
-    FhirResourceFactory.modifyResource(ctx, observation, fhirPathToValueFunction);
+    var observation = FhirResourceFactory.createTestResource(Observation.class,
+        "src/main/resources/FhirProfileToModify/DefaultQuantityObservation.json",
+        fhirPathToValueFunction);
     assertFalse(defaultObservation.equalsDeep(observation));
   }
 
@@ -71,7 +72,7 @@ public class ObservationTest {
             Paths.get("src/main/resources/FhirProfileToModify/DefaultQuantityObservation.json")));
     var defaultObservation = parser.parseResource(Observation.class, json);
 
-    var fhirPathToValueFunction = FhirResourceFactory.loadFhirPathToValueFunctionFromJson(
+    var fhirPathToValueFunction = BluePrintLoader.loadFhirPathToValueFunctionFromJson(
         Path.of("src/main/resources/TestDataBluePrint/AldostroneObservationBluePrint.json"));
 
     var startTime = System.currentTimeMillis();
@@ -79,14 +80,17 @@ public class ObservationTest {
         .parallel()
         .mapToObj(i -> {
           Observation observation = defaultObservation.copy();
-          FhirResourceFactory.modifyResource(ctx, observation, fhirPathToValueFunction);
+          try {
+            FhirResourceFactory.modifyResource(ctx, observation, fhirPathToValueFunction);
+          } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+            e.printStackTrace();
+          }
           return observation;
         })
         .toList();
     var endTime = System.currentTimeMillis();
     var elapsedTime = endTime - startTime;
-//    System.out.println("Generated " + numberToCreate + " observations in " + elapsedTime
-//        + " ms using parallel streams.");
+
     assertTrue(elapsedTime < 20000); // Ensure generation took less than 1 second
     assertFalse(observations.get(numberToCreate - 1).equalsDeep(observations.get(0)));
   }
@@ -102,7 +106,7 @@ public class ObservationTest {
             Paths.get("src/main/resources/FhirProfileToModify/DefaultCondition.json")));
     var defaultCondition = parser.parseResource(Condition.class, json);
 
-    var fhirPathToValueFunction = FhirResourceFactory.loadFhirPathToValueFunctionFromJson(
+    var fhirPathToValueFunction = BluePrintLoader.loadFhirPathToValueFunctionFromJson(
         Path.of("src/main/resources/TestDataBluePrint/ConditionBluePrint.json"));
 
     var startTime = System.currentTimeMillis();
@@ -110,16 +114,20 @@ public class ObservationTest {
         .parallel()
         .mapToObj(i -> {
           var condition = defaultCondition.copy();
-          FhirResourceFactory.modifyResource(ctx, condition, fhirPathToValueFunction);
+          try {
+            FhirResourceFactory.modifyResource(ctx, condition, fhirPathToValueFunction);
+          } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+            e.printStackTrace();
+          }
           return condition;
         })
         .toList();
     var endTime = System.currentTimeMillis();
     var elapsedTime = endTime - startTime;
-//    System.out.println("Generated " + numberToCreate + " conditions in " + elapsedTime
-//        + " ms using parallel streams.");
     assertTrue(elapsedTime < 20000); // Ensure generation took less than 1 second
     assertFalse(conditions.get(numberToCreate - 1).equalsDeep(conditions.get(0)));
+    parser.setPrettyPrint(true);
+    System.out.println(parser.encodeResourceToString(conditions.get(0)));
   }
 
 
