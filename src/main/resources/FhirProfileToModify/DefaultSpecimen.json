@@ -1,0 +1,19 @@
+{
+  "resourceType": "Specimen",
+  "status": "available",
+  "type": {
+    "coding": [
+      {
+        "system": "https://www.medizininformatik-initiative.de/fhir/fdpg/ValueSet/TopXSpecimenCodes",
+        "code": "1234",
+        "display": "Blood"
+      }
+    ]
+  },
+  "subject": {
+    "reference": "Patient/12345"
+  },
+  "collection": {
+    "collected": "2023-02-22T10:00:00+00:00"
+  }
+}

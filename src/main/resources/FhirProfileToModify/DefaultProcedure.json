@@ -1,0 +1,17 @@
+{
+  "resourceType": "Procedure",
+  "status": "in-progress",
+  "code": {
+    "coding": [
+      {
+        "system": "http://fhir.de/ValueSet/bfarm/ops",
+        "code": "c2272",
+        "display": "Mastectomy"
+      }
+    ]
+  },
+  "subject": {
+    "reference": "Patient/example"
+  },
+  "performedDateTime": "2022-02-18T10:30:00-05:00"
+}

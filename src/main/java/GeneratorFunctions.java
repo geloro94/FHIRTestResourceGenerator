@@ -355,4 +355,7 @@ public class GeneratorFunctions {
     return FAKER.name().firstName();
   }
 
+  public static String randomURI() {
+    return "http://example.com/" + UUID.randomUUID();
+  }
 }

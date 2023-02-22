@@ -10,8 +10,11 @@ import java.util.HashMap;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Condition;
+import org.hl7.fhir.r4.model.Consent;
 import org.hl7.fhir.r4.model.Enumeration;
 import org.hl7.fhir.r4.model.Observation;
+import org.hl7.fhir.r4.model.Procedure;
+import org.hl7.fhir.r4.model.Specimen;
 
 
 public class FhirResourceFactory {
@@ -40,31 +43,36 @@ public class FhirResourceFactory {
   @SuppressWarnings("unchecked")
   public static <T extends IBaseResource> T createTestResourceFromBluePrint(
       HashMap<String, String> bluePrint) {
-    var resourceName = BluePrintLoader.getResourceName(bluePrint);
-    if (resourceName.equals("Observation")) {
-      if (bluePrint.containsKey("Observation.value as Quantity")) {
-        try {
-          return (T) createTestResource(Observation.class,
-              "src/main/resources/FhirProfileToModify/DefaultQuantityObservation.json", bluePrint);
-        } catch (IOException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
-          e.printStackTrace();
-        }
+    String resourceName = BluePrintLoader.getResourceName(bluePrint);
+    try {
+      switch (resourceName) {
+        case "Condition":
+          return (T) createTestResource(Condition.class,
+              "src/main/resources/FhirProfileToModify/DefaultCondition.json", bluePrint);
+        case "Consent":
+          return (T) createTestResource(Consent.class,
+              "src/main/resources/FhirProfileToModify/DefaultConsent.json", bluePrint);
+        case "Observation":
+          if (bluePrint.containsKey("Observation.value as Quantity")) {
+            return (T) createTestResource(Observation.class,
+                "src/main/resources/FhirProfileToModify/DefaultQuantityObservation.json",
+                bluePrint);
+          } else if (bluePrint.containsKey("(Observation.value as CodeableConcept).coding")) {
+            return (T) createTestResource(Observation.class,
+                "src/main/resources/FhirProfileToModify/DefaultCodeableConceptObservation.json",
+                bluePrint);
+          }
+          break;
+        case "Procedure":
+          return (T) createTestResource(Procedure.class,
+              "src/main/resources/FhirProfileToModify/DefaultProcedure.json", bluePrint);
+        case "Specimen":
+          return (T) createTestResource(Specimen.class,
+              "src/main/resources/FhirProfileToModify/DefaultSpecimen.json", bluePrint);
+
       }
-      else if(bluePrint.containsKey("(Observation.value as CodeableConcept).coding")) {
-        try {
-          return (T) createTestResource(Observation.class,
-              "src/main/resources/FhirProfileToModify/DefaultCodeableConceptObservation.json", bluePrint);
-        } catch (IOException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
-          e.printStackTrace();
-        }
-      }
-    } else if (resourceName.equals("Condition")) {
-      try {
-        return (T) createTestResource(Condition.class,
-            "src/main/resources/FhirProfileToModify/DefaultCondition.json", bluePrint);
-      } catch (IOException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
-        e.printStackTrace();
-      }
+    } catch (IOException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+      e.printStackTrace();
     }
     return null;
   }
@@ -121,10 +129,16 @@ public class FhirResourceFactory {
     Class<? extends Enumeration<?>> statusClass;
     try {
       var resourceName = resource.getClass().getName();
+      var statusName =
+          resourceName.split("\\.")[resourceName.split("\\.").length - 1].equals("Consent")
+              ? "State" : "Status";
       var factoryClassName =
-          resourceName.split("\\.")[resourceName.split("\\.").length - 1] + "StatusEnumFactory";
-      var statusClassName = resourceName.split("\\.")[resourceName.split("\\.").length - 1] + "Status";
-      statusClass = (Class<? extends Enumeration<?>>) Class.forName(resourceName + "$" + statusClassName);
+          resourceName.split("\\.")[resourceName.split("\\.").length - 1] + statusName
+              + "EnumFactory";
+      var statusClassName =
+          resourceName.split("\\.")[resourceName.split("\\.").length - 1] + statusName;
+      statusClass = (Class<? extends Enumeration<?>>) Class.forName(
+          resourceName + "$" + statusClassName);
       statusClassFactory = Class.forName(resourceName + "$" + factoryClassName);
       var factoryConstructor = statusClassFactory.getConstructor();
       var statusFactory = factoryConstructor.newInstance();
