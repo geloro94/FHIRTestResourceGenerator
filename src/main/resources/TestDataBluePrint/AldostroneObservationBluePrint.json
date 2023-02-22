@@ -3,6 +3,7 @@
   "Observation.identifier.system": "randomIdentifierSystemURI()",
   "Observation.identifier.assigner": "randomOrganizationReference()",
   "Observation.identifier.type.coding": "fixedCoding(http://terminology.hl7.org/CodeSystem/v2-0203, OBI, None, None)",
+  "Observation.status": "randomCode(http://hl7.org/fhir/ValueSet/observation-status|4.0.1)",
   "Observation.category.coding": "fixedCoding(http://terminology.hl7.org/CodeSystem/observation-category, laboratory, None, None)",
   "Observation.code.coding": "fixedCoding(http://loinc.org, 1763-2, None, None)",
   "Observation.subject": "randomPatientReference()",

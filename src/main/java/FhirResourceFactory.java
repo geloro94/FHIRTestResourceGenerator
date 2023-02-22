@@ -42,11 +42,21 @@ public class FhirResourceFactory {
       HashMap<String, String> bluePrint) {
     var resourceName = BluePrintLoader.getResourceName(bluePrint);
     if (resourceName.equals("Observation")) {
-      try {
-        return (T) createTestResource(Observation.class,
-            "src/main/resources/FhirProfileToModify/DefaultQuantityObservation.json", bluePrint);
-      } catch (IOException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
-        e.printStackTrace();
+      if (bluePrint.containsKey("Observation.value as Quantity")) {
+        try {
+          return (T) createTestResource(Observation.class,
+              "src/main/resources/FhirProfileToModify/DefaultQuantityObservation.json", bluePrint);
+        } catch (IOException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+          e.printStackTrace();
+        }
+      }
+      else if(bluePrint.containsKey("(Observation.value as CodeableConcept).coding")) {
+        try {
+          return (T) createTestResource(Observation.class,
+              "src/main/resources/FhirProfileToModify/DefaultCodeableConceptObservation.json", bluePrint);
+        } catch (IOException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+          e.printStackTrace();
+        }
       }
     } else if (resourceName.equals("Condition")) {
       try {
