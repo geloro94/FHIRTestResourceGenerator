@@ -1,4 +1,5 @@
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.github.javafaker.Faker;
 import com.google.common.cache.CacheBuilder;
@@ -10,6 +11,7 @@ import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -273,9 +275,12 @@ public class GeneratorFunctions {
         ZoneId.systemDefault());
 
     Period period = new Period();
-    period.setStartElement(new DateTimeType(String.valueOf(randomDateTime)));
-    period.setEndElement(new DateTimeType(
-        String.valueOf(randomDateTime.plusDays(ThreadLocalRandom.current().nextInt(1, 365)))));
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+    String randomStartString = randomDateTime.format(formatter) + "+01:00";
+    period.setStartElement(new DateTimeType(randomStartString));
+    LocalDateTime randomEndDateTime = randomDateTime.plusDays(ThreadLocalRandom.current().nextInt(1, 365));
+    String randomEndString = randomEndDateTime.format(formatter) + "+01:00";
+    period.setEndElement(new DateTimeType(randomEndString));
     return period;
   }
 
