@@ -7,10 +7,11 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
@@ -20,6 +21,7 @@ import org.hl7.fhir.r4.model.Enumeration;
 import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Procedure;
 import org.hl7.fhir.r4.model.Reference;
+import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.Specimen;
 
 
@@ -97,24 +99,20 @@ public class FhirResourceFactory {
   public static <T extends IBase> List<IBaseResource> modifyResource(FhirContext ctx, T resource,
       HashMap<String, String> fhirPathToValueFunction)
       throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-    List<IBaseResource> resultingResources = new java.util.ArrayList<>(List.of());
+    List<IBaseResource> resultingResources = new ArrayList<>();
     for (var entry : fhirPathToValueFunction.entrySet()) {
       var fhirPath = entry.getKey();
-
       var valueFunction = entry.getValue();
       JavaFunctionParser.FunctionResult result = JavaFunctionParser.parse(valueFunction);
       if (result == null) {
-        System.out.println("Could not parse " + valueFunction);
-        continue;
+        throw new IllegalArgumentException("Could not parse " + valueFunction);
       }
       var valueType = result.return_type();
       var value = result.result();
 
       if (valueType == ResourceReferenceContainer.class) {
-        if (extractResource(value).isPresent()) {
-          resultingResources = Stream.concat(resultingResources.stream(),
-              extractResource(value).get().stream()).toList();
-        }
+        var extractedResources = extractResource(value).orElse(Collections.emptyList());
+        resultingResources.addAll(extractedResources);
         value = ((ResourceReferenceContainer) value).reference();
         valueType = Reference.class;
       }
@@ -122,7 +120,6 @@ public class FhirResourceFactory {
       try {
         var evalResult = ctx.newFhirPath().evaluateFirst(resource, fhirPath, valueType);
         Object finalValue = value;
-
         evalResult.ifPresentOrElse(old_value -> FhirResourceFactory.updateObject(old_value,
                 finalValue),
             () -> {
@@ -137,8 +134,7 @@ public class FhirResourceFactory {
         }
       }
     }
-    resultingResources = Stream.concat(resultingResources.stream(),
-        Stream.of((IBaseResource) resource)).toList();
+    resultingResources.add((IBaseResource) resource);
     return resultingResources;
   }
 
@@ -225,9 +221,22 @@ public class FhirResourceFactory {
   }
 
   public static void writeBundle(Bundle bundle, String filename) {
-    try (FileWriter writer = new FileWriter(filename + ".json")) {
+    try (FileWriter writer = new FileWriter(filename, false)) {
       String encoded = parser.setPrettyPrint(true).encodeResourceToString(bundle);
       writer.write(encoded);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public static void writeNDJson(List<IBaseResource> resources, String filename) {
+    try (FileWriter writer = new FileWriter(filename, false)) {
+      for (IBaseResource resource : resources) {
+        Resource r = (Resource) resource;
+        parser.setPrettyPrint(false);
+        parser.encodeResourceToWriter(r, writer);
+        writer.append("\n");
+      }
     } catch (IOException e) {
       e.printStackTrace();
     }

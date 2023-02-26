@@ -1,5 +1,4 @@
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.github.javafaker.Faker;
 import com.google.common.cache.CacheBuilder;

@@ -13,6 +13,7 @@ public class Application {
         .toList();
     var bundle = FhirTransactionBundleConverter.convertToFhirTransactionBundle(resources);
     FhirResourceFactory.writeBundle(bundle, "src/main/resources/Bundle/GeneratedBundle.json");
+    FhirResourceFactory.writeNDJson(resources, "src/main/resources/NDJson/resources.ndjson");
 
   }
 
