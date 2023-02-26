@@ -73,7 +73,7 @@ public class GeneratorFunctionsTest {
     var patientReference = GeneratorFunctions.randomPatientReference();
     assertNotNull(patientReference);
     assertNotNull(patientReference.reference());
-    assertNotNull(patientReference.resource());
+    assertNotNull(patientReference.resources());
   }
 
   @Test
@@ -134,7 +134,7 @@ public class GeneratorFunctionsTest {
     var organizationReference = GeneratorFunctions.randomOrganizationReference();
     assertNotNull(organizationReference);
     assertNotNull(organizationReference.reference());
-    assertNotNull(organizationReference.resource());
+    assertNotNull(organizationReference.resources());
   }
 
   @Test
@@ -154,5 +154,11 @@ public class GeneratorFunctionsTest {
     var identifier = GeneratorFunctions.randomIdentifierCodeValue();
     assertNotNull(identifier);
     assertNotNull(identifier.getValue());
+  }
+
+  @Test
+  public void testRandomGender() {
+    var gender = GeneratorFunctions.randomGender();
+    System.out.println(gender.toCode());
   }
 }

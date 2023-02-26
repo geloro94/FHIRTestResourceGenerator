@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
@@ -73,6 +74,9 @@ public class FhirResourceFactory {
         case "Specimen":
           return createTestResource(Specimen.class,
               "src/main/resources/FhirProfileToModify/DefaultSpecimen.json", bluePrint);
+        case "Patient":
+          return createTestResource(org.hl7.fhir.r4.model.Patient.class,
+              "src/main/resources/FhirProfileToModify/DefaultPatient.json", bluePrint);
 
       }
     } catch (IOException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
@@ -97,7 +101,6 @@ public class FhirResourceFactory {
     for (var entry : fhirPathToValueFunction.entrySet()) {
       var fhirPath = entry.getKey();
 
-
       var valueFunction = entry.getValue();
       JavaFunctionParser.FunctionResult result = JavaFunctionParser.parse(valueFunction);
       if (result == null) {
@@ -108,9 +111,11 @@ public class FhirResourceFactory {
       var value = result.result();
 
       if (valueType == ResourceReferenceContainer.class) {
-        extractResource(value).ifPresent(referencedResource ->
-            resultingResources.add((IBaseResource) referencedResource));
-        value = ((ResourceReferenceContainer<?>) value).reference();
+        if (extractResource(value).isPresent()) {
+          resultingResources = Stream.concat(resultingResources.stream(),
+              extractResource(value).get().stream()).toList();
+        }
+        value = ((ResourceReferenceContainer) value).reference();
         valueType = Reference.class;
       }
 
@@ -127,19 +132,19 @@ public class FhirResourceFactory {
       } catch (FhirPathExecutionException e) {
         if (fhirPath.endsWith(".status")) {
           handleStatus(resource, fhirPath, value);
-        }
-        else {
+        } else {
           e.printStackTrace();
         }
       }
     }
-    resultingResources.add((IBaseResource) resource);
+    resultingResources = Stream.concat(resultingResources.stream(),
+        Stream.of((IBaseResource) resource)).toList();
     return resultingResources;
   }
 
-  private static Optional<Object> extractResource(Object value) {
+  private static Optional<List<IBaseResource>> extractResource(Object value) {
     if (value instanceof ResourceReferenceContainer) {
-      return Optional.ofNullable(((ResourceReferenceContainer<?>) value).resource());
+      return Optional.ofNullable(((ResourceReferenceContainer) value).resources());
     }
     return Optional.empty();
   }
@@ -220,7 +225,7 @@ public class FhirResourceFactory {
   }
 
   public static void writeBundle(Bundle bundle, String filename) {
-    try (FileWriter writer = new FileWriter(filename + ".json") ) {
+    try (FileWriter writer = new FileWriter(filename + ".json")) {
       String encoded = parser.setPrettyPrint(true).encodeResourceToString(bundle);
       writer.write(encoded);
     } catch (IOException e) {

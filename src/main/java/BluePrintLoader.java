@@ -2,8 +2,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +52,15 @@ public class BluePrintLoader {
 
     return bluePrints.map(BluePrintLoader::toPathFunctionMap).toList();
 
+  }
+
+
+  public static HashMap<String, String> loadBluePrint(String filePath) throws IOException {
+    byte[] encoded = Files.readAllBytes(Paths.get(filePath));
+    String jsonString = new String(encoded, StandardCharsets.UTF_8);
+
+    JSONObject jsonObject = new JSONObject(jsonString);
+    return toPathFunctionMap(jsonObject);
   }
 
   @NotNull

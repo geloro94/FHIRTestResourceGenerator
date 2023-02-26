@@ -17,14 +17,21 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Address;
+import org.hl7.fhir.r4.model.Address.AddressType;
 import org.hl7.fhir.r4.model.CanonicalType;
 import org.hl7.fhir.r4.model.CodeType;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Consent;
 import org.hl7.fhir.r4.model.DateTimeType;
+import org.hl7.fhir.r4.model.Enumerations.AdministrativeGender;
+import org.hl7.fhir.r4.model.HumanName;
 import org.hl7.fhir.r4.model.IdType;
+import org.hl7.fhir.r4.model.Identifier;
+import org.hl7.fhir.r4.model.Meta;
 import org.hl7.fhir.r4.model.Organization;
 import org.hl7.fhir.r4.model.Parameters;
 import org.hl7.fhir.r4.model.Patient;
@@ -70,13 +77,39 @@ public class GeneratorFunctions {
    *
    * @return a random Patient
    */
-  public static Patient randomPatient() {
+  public static List<IBaseResource> randomPatient() {
+    List<IBaseResource> resources;
     Patient patient = new Patient();
-    patient.setId(UUID.randomUUID().toString());
-    patient.addName().setFamily(FAKER.name().lastName()).addGiven(FAKER.name().firstName());
-    patient.addAddress().setCity(FAKER.address().city()).setPostalCode(FAKER.address().zipCode())
-        .setCountry(FAKER.address().country());
-    return patient;
+    patient.setId(randomID());
+    patient.setMeta(new Meta().setProfile(List.of(fixedCanonical(
+        "https://www.medizininformatik-initiative.de/fhir/core/modul-person/StructureDefinition/Patient"))));
+    patient.setName(List.of(createHumanName("official", randomFamilyName(), randomGivenName())));
+    patient.setGender(randomGender());
+    patient.setBirthDate(randomDate());
+    patient.setAddress(
+        List.of(createAddress(AddressType.PHYSICAL, List.of(randomStreetWithNumber()),
+            randomCity(), null, randomCode("http://hl7.org/fhir/ValueSet/iso3166-1-2").getCode(),
+            "DE")));
+    var identifier = new Identifier();
+    identifier.setType(new CodeableConcept().addCoding(
+        fixedCoding("http://fhir.de/CodeSystem/identifier-type-de-basis", "GKV", null, null)));
+    identifier.setSystem("http://fhir.de/IdSystem/gkv/kvid-10");
+    identifier.setValue(randomGkvNumber());
+    var org = randomOrganizationReference();
+    identifier.setAssigner(org.reference());
+    resources = org.resources();
+    patient.setIdentifier(List.of(identifier));
+    resources = Stream.concat(resources.stream(), Stream.of(patient)).toList();
+    return resources;
+  }
+
+  public static String randomGkvNumber() {
+    var random = new Random();
+    var sb = new StringBuilder();
+    for (int i = 0; i < 10; i++) {
+      sb.append(random.nextInt(10));
+    }
+    return sb.toString();
   }
 
 
@@ -160,12 +193,16 @@ public class GeneratorFunctions {
    *
    * @return a random Reference to a Patient
    */
-  public static ResourceReferenceContainer<Patient> randomPatientReference() {
-    Patient patient = randomPatient();
+  public static ResourceReferenceContainer randomPatientReference() {
+    List<IBaseResource> resources = randomPatient();
     Reference reference = new Reference();
-    reference.setReference("Patient/" + patient.getIdElement().getIdPart());
-    reference.setDisplay(patient.getNameFirstRep().getNameAsSingleString());
-    return ResourceReferenceContainer.of(patient, reference);
+    for (IBaseResource resource : resources) {
+      if (resource instanceof Patient) {
+        reference.setReference("Patient/" + resource.getIdElement().getIdPart());
+        reference.setDisplay(((Patient) resource).getNameFirstRep().getNameAsSingleString());
+      }
+    }
+    return ResourceReferenceContainer.of(resources, reference);
   }
 
   /**
@@ -179,6 +216,15 @@ public class GeneratorFunctions {
     long maxDay = now.getEpochSecond();
     long randomDay = minDay + (long) (Math.random() * (maxDay - minDay));
     return new DateTimeType(Date.from(Instant.ofEpochSecond(randomDay)));
+  }
+
+
+  public static Date randomDate() {
+    Instant now = Instant.now();
+    long minDay = Instant.parse("2000-01-01T00:00:00.00Z").getEpochSecond();
+    long maxDay = now.getEpochSecond();
+    long randomDay = minDay + (long) (Math.random() * (maxDay - minDay));
+    return Date.from(Instant.ofEpochSecond(randomDay));
   }
 
   /**
@@ -255,7 +301,7 @@ public class GeneratorFunctions {
    *
    * @return a random Reference to an Organization
    */
-  public static ResourceReferenceContainer<Organization> randomOrganizationReference() {
+  public static ResourceReferenceContainer randomOrganizationReference() {
     var organization = randomOrganization();
     Reference reference = new Reference();
     reference.setReference("Organization/" + organization.getIdElement().getIdPart());
@@ -314,8 +360,7 @@ public class GeneratorFunctions {
    * @return an Address based on the given parameters
    */
   public static Address createAddress(Address.AddressType type, List<String> lines, String city,
-      String state,
-      String postalCode, String country) {
+      String state, String postalCode, String country) {
     Address address = new Address();
     address.setType(type);
     for (String line : lines) {
@@ -327,6 +372,7 @@ public class GeneratorFunctions {
     address.setCountry(country);
     return address;
   }
+
 
   /**
    * Generates a random Street Address with a number.
@@ -405,6 +451,7 @@ public class GeneratorFunctions {
 
   /**
    * Generates a Consent Provision with full compliance.
+   *
    * @return a Consent Provision with full compliance
    */
   public static Consent.provisionComponent fullConsentProvision() {
@@ -423,5 +470,28 @@ public class GeneratorFunctions {
         }).toList();
     consentProvision.setProvision(provisions);
     return consentProvision;
+  }
+
+  public static HumanName createHumanName(String use, String family, String given) {
+    HumanName humanName = new HumanName();
+    humanName.setUse(HumanName.NameUse.fromCode(use));
+    humanName.setFamily(family);
+    humanName.addGiven(given);
+    return humanName;
+  }
+
+  public static AdministrativeGender randomGender() {
+    return getRandomEnum(AdministrativeGender.class);
+  }
+
+  public static <T extends Enum<?>> T getRandomEnum(Class<T> clazz) {
+    Random random = new Random();
+    int x = random.nextInt(clazz.getEnumConstants().length);
+    T randomEnum = clazz.getEnumConstants()[x];
+    while (randomEnum == null) {
+      x = random.nextInt(clazz.getEnumConstants().length);
+      randomEnum = clazz.getEnumConstants()[x];
+    }
+    return randomEnum;
   }
 }

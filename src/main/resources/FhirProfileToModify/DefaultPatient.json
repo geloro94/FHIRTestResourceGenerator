@@ -1,0 +1,50 @@
+{
+  "resourceType": "Patient",
+  "meta": {
+    "profile": [
+      "https://www.medizininformatik-initiative.de/fhir/core/modul-person/StructureDefinition/Patient"
+    ]
+  },
+  "id": "patient-1234",
+  "identifier": [
+    {
+      "type": {
+        "coding": [
+          {
+            "system": "http://fhir.de/CodeSystem/identifier-type-de-basis",
+            "code": "GKV",
+            "display": "None"
+          }
+        ]
+      },
+      "assigner": {
+        "identifier": {
+          "system": "http://example.com/identifier-system",
+          "value": "123456"
+        },
+        "reference": "Organization/123"
+      }
+    }
+  ],
+  "name": [
+    {
+      "use": "official",
+      "family": "Doe",
+      "given": [
+        "John"
+      ]
+    }
+  ],
+  "gender": "male",
+  "birthDate": "1970-01-01",
+  "address": [
+    {
+      "type": "postal",
+      "line": [
+        "123 Main St"
+      ],
+      "city": "Anytown",
+      "country": "US"
+    }
+  ]
+}
