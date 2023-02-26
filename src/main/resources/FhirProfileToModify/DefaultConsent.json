@@ -1,5 +1,11 @@
 {
   "resourceType": "Consent",
+  "id": "123",
+  "meta": {
+    "profile": [
+      "http://hl7.org/fhir/StructureDefinition/Consent"
+    ]
+  },
   "status": "active",
   "scope": {
     "coding": [

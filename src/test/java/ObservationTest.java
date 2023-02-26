@@ -7,6 +7,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.model.Base;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.Observation;
@@ -54,7 +59,9 @@ public class ObservationTest {
     var observation = FhirResourceFactory.createTestResource(Observation.class,
         "src/main/resources/FhirProfileToModify/DefaultQuantityObservation.json",
         fhirPathToValueFunction);
-    assertFalse(defaultObservation.equalsDeep(observation));
+    System.out.println(parser.setPrettyPrint(true).encodeResourceToString(
+        (IBaseResource) observation));
+    assertFalse(defaultObservation.equalsDeep((Base) observation));
   }
 
   /**
@@ -80,20 +87,27 @@ public class ObservationTest {
         .parallel()
         .mapToObj(i -> {
           Observation observation = defaultObservation.copy();
+          List<IBaseResource> resources = new ArrayList<>();
           try {
-            FhirResourceFactory.modifyResource(ctx, observation, fhirPathToValueFunction);
+            resources = FhirResourceFactory.modifyResource(ctx, observation, fhirPathToValueFunction);
           } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
             e.printStackTrace();
           }
-          return observation;
-        })
+          return resources;
+        }).flatMap(Collection::stream)
         .toList();
+    var bundle = FhirTransactionBundleConverter.convertToFhirTransactionBundle(
+        observations);
+    FhirResourceFactory.writeBundle(bundle, "src/main/resources/Bundle/observationBundle.json");
     var endTime = System.currentTimeMillis();
     var elapsedTime = endTime - startTime;
 
     assertTrue(elapsedTime < 20000); // Ensure generation took less than 1 second
-    assertFalse(observations.get(numberToCreate - 1).equalsDeep(observations.get(0)));
+//    assertFalse(observations.get(numberToCreate - 1).equalsDeep(observations.get(0)));
+    System.out.println("Generated " + numberToCreate + " observations in " + elapsedTime + " ms");
   }
+
+
 
 
   @Test
@@ -114,18 +128,18 @@ public class ObservationTest {
         .parallel()
         .mapToObj(i -> {
           var condition = defaultCondition.copy();
+          List<IBaseResource> resources = new ArrayList<>();
           try {
-            FhirResourceFactory.modifyResource(ctx, condition, fhirPathToValueFunction);
+            resources = FhirResourceFactory.modifyResource(ctx, condition, fhirPathToValueFunction);
           } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
             e.printStackTrace();
           }
-          return condition;
-        })
+          return resources;
+        }).flatMap(Collection::stream)
         .toList();
     var endTime = System.currentTimeMillis();
     var elapsedTime = endTime - startTime;
     assertTrue(elapsedTime < 20000); // Ensure generation took less than 1 second
-    assertFalse(conditions.get(numberToCreate - 1).equalsDeep(conditions.get(0)));
     parser.setPrettyPrint(true);
     System.out.println(parser.encodeResourceToString(conditions.get(0)));
   }

@@ -1,5 +1,11 @@
 {
   "resourceType": "Observation",
+  "id": "123",
+  "meta": {
+    "profile": [
+      "http://hl7.org/fhir/StructureDefinition/Observation"
+    ]
+  },
   "identifier": {
     "type": {
       "coding": [

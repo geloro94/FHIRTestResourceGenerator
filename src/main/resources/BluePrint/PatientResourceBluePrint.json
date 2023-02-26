@@ -1,0 +1,12 @@
+{
+  "Patient.meta.profile": "fixedCanonical(https://www.medizininformatik-initiative.de/fhir/core/modul-person/StructureDefinition/Patient)",
+  "Patient.id": "randomID()",
+  "Patient.identifier.type": "fixedCoding(http://fhir.de/CodeSystem/identifier-type-de-basis, GKV, None, None)",
+  "Patient.identifier.assigner.identifier.value": "randomIdentifierCodeValue()",
+  "Patient.identifier.assigner.identifier.system": "randomIdentifierSystemURI()",
+  "Patient.identifier.assigner": "randomOrganizationReference()",
+  "Patient.name": "createHumanName(official, randomFamilyName(), randomGivenName())",
+  "Patient.gender": "randomCode(http://hl7.org/fhir/ValueSet/administrative-gender|4.0.1)",
+  "Patient.birthDate": "randomDate()",
+  "Patient.address": "createAddress(randomCode(http://hl7.org/fhir/ValueSet/address-type|4.0.1), ['randomStreetWithNumber()'], randomCity(), None, randomCode(http://hl7.org/fhir/ValueSet/iso3166-1-2))"
+}

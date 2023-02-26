@@ -18,9 +18,13 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import org.hl7.fhir.r4.model.Address;
+import org.hl7.fhir.r4.model.CanonicalType;
 import org.hl7.fhir.r4.model.CodeType;
+import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.Consent;
 import org.hl7.fhir.r4.model.DateTimeType;
+import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Organization;
 import org.hl7.fhir.r4.model.Parameters;
 import org.hl7.fhir.r4.model.Patient;
@@ -75,6 +79,11 @@ public class GeneratorFunctions {
     return patient;
   }
 
+
+  public static IdType randomID() {
+    return new IdType(UUID.randomUUID().toString());
+  }
+
   /**
    * Generates a random Organization.
    *
@@ -111,7 +120,7 @@ public class GeneratorFunctions {
    */
   public static List<ValueSetExpansionContainsComponent> getValueSet(String valueSetUrl) {
     var version = "";
-    if(valueSetUrl.contains("|")) {
+    if (valueSetUrl.contains("|")) {
       version = valueSetUrl.split("\\|")[1];
       valueSetUrl = valueSetUrl.split("\\|")[0];
     }
@@ -127,6 +136,7 @@ public class GeneratorFunctions {
 
   /**
    * Generates a random Coding from a value set.
+   *
    * @param valueSetUri the value set to choose the code from
    * @return a random Coding
    */
@@ -150,16 +160,17 @@ public class GeneratorFunctions {
    *
    * @return a random Reference to a Patient
    */
-  public static Reference randomPatientReference() {
+  public static ResourceReferenceContainer<Patient> randomPatientReference() {
     Patient patient = randomPatient();
     Reference reference = new Reference();
     reference.setReference("Patient/" + patient.getIdElement().getIdPart());
     reference.setDisplay(patient.getNameFirstRep().getNameAsSingleString());
-    return reference;
+    return ResourceReferenceContainer.of(patient, reference);
   }
 
   /**
    * Generates a random DateTimeType.
+   *
    * @return a random DateTimeType
    */
   public static DateTimeType randomDateTime() {
@@ -172,8 +183,9 @@ public class GeneratorFunctions {
 
   /**
    * Generates a Coding
-   * @param system the system of the coding
-   * @param code the code of the coding
+   *
+   * @param system  the system of the coding
+   * @param code    the code of the coding
    * @param version the version of the coding
    * @param display the display of the coding
    * @return a Coding based on the given parameters
@@ -196,8 +208,13 @@ public class GeneratorFunctions {
     return new UriType(value);
   }
 
+  public static CanonicalType fixedCanonical(String value) {
+    return new CanonicalType(value);
+  }
+
   /**
    * Generates a random Period.
+   *
    * @return a random Period
    */
   public static Period randomPeriod() {
@@ -218,6 +235,7 @@ public class GeneratorFunctions {
 
   /**
    * Generates a random Identifier code value.
+   *
    * @return a random Identifier code value
    */
   public static StringType randomIdentifierCodeValue() {
@@ -237,22 +255,23 @@ public class GeneratorFunctions {
    *
    * @return a random Reference to an Organization
    */
-  public static Reference randomOrganizationReference() {
+  public static ResourceReferenceContainer<Organization> randomOrganizationReference() {
     var organization = randomOrganization();
     Reference reference = new Reference();
     reference.setReference("Organization/" + organization.getIdElement().getIdPart());
     reference.setDisplay(organization.getName());
-    return reference;
+    return ResourceReferenceContainer.of(organization, reference);
   }
 
   /**
    * Generates a random Quantity. If the value is null, a random value between -100 and 100 is
    * generated. If the comparator is not null, the value is adjusted to be within the comparator
    * range.
-   * @param value the value of the quantity
-   * @param unit the unit of the quantity
-   * @param system the system of the quantity
-   * @param code the code of the quantity
+   *
+   * @param value      the value of the quantity
+   * @param unit       the unit of the quantity
+   * @param system     the system of the quantity
+   * @param code       the code of the quantity
    * @param comparator the comparator of the quantity
    * @return a random Quantity
    */
@@ -285,12 +304,13 @@ public class GeneratorFunctions {
 
   /**
    * Generates an Address.
-   * @param type the type of the address (i.e. postal, physical, etc.)
-   * @param lines the lines of the address (i.e. street address, suite number, etc.)
-   * @param city the city of the address
-   * @param state the state of the address
+   *
+   * @param type       the type of the address (i.e. postal, physical, etc.)
+   * @param lines      the lines of the address (i.e. street address, suite number, etc.)
+   * @param city       the city of the address
+   * @param state      the state of the address
    * @param postalCode the postal code of the address
-   * @param country the country of the address
+   * @param country    the country of the address
    * @return an Address based on the given parameters
    */
   public static Address createAddress(Address.AddressType type, List<String> lines, String city,
@@ -310,13 +330,16 @@ public class GeneratorFunctions {
 
   /**
    * Generates a random Street Address with a number.
+   *
    * @return a random Street Address with a number
    */
   public static String randomStreetWithNumber() {
     return FAKER.address().streetAddress();
   }
 
-  /** Generates a random City.
+  /**
+   * Generates a random City.
+   *
    * @return a random City
    */
   public static String randomCity() {
@@ -325,6 +348,7 @@ public class GeneratorFunctions {
 
   /**
    * Generates a random State.
+   *
    * @return a random State
    */
   public static String randomState() {
@@ -333,6 +357,7 @@ public class GeneratorFunctions {
 
   /**
    * Generates a random Postal Code.
+   *
    * @return a random Postal Code
    */
   public static String randomPostalCode() {
@@ -341,6 +366,7 @@ public class GeneratorFunctions {
 
   /**
    * Generates a random Family Name.
+   *
    * @return a random Family Name
    */
   public static String randomFamilyName() {
@@ -349,6 +375,7 @@ public class GeneratorFunctions {
 
   /**
    * Generates a random Given Name.
+   *
    * @return a random Given Name
    */
   public static String randomGivenName() {
@@ -357,5 +384,44 @@ public class GeneratorFunctions {
 
   public static String randomURI() {
     return "http://example.com/" + UUID.randomUUID();
+  }
+
+  /**
+   * Generates a all Coding from a value set.
+   *
+   * @param valueSetUri the value set to choose the code from
+   * @return a list of all Codings from the value set
+   */
+  public static List<Coding> allCoding(String valueSetUri) {
+    var codes = VALUE_SET_CODES_CACHE.getUnchecked(valueSetUri);
+    return codes.stream().map(code -> {
+      Coding coding = new Coding();
+      coding.setSystem(code.getSystem());
+      coding.setCode(code.getCode());
+      coding.setDisplay(code.getDisplay());
+      return coding;
+    }).toList();
+  }
+
+  /**
+   * Generates a Consent Provision with full compliance.
+   * @return a Consent Provision with full compliance
+   */
+  public static Consent.provisionComponent fullConsentProvision() {
+    var consentProvision = new Consent.provisionComponent();
+    consentProvision.setType(Consent.ConsentProvisionType.fromCode(fixedCode("deny").toString()));
+    consentProvision.setPeriod(randomPeriod());
+    var provisions = allCoding(
+        "https://www.medizininformatik-initiative.de/fhir/fdpg/ValueSet/mii-vs-consent-policy")
+        .stream().map(coding -> {
+          var sub_provision = new Consent.provisionComponent().setCode(
+              List.of(new CodeableConcept().addCoding(coding)));
+          sub_provision.setPeriod(randomPeriod());
+          sub_provision.setType(
+              Consent.ConsentProvisionType.fromCode(fixedCode("permit").toString()));
+          return sub_provision;
+        }).toList();
+    consentProvision.setProvision(provisions);
+    return consentProvision;
   }
 }

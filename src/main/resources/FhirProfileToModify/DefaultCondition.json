@@ -1,5 +1,11 @@
 {
   "resourceType": "Condition",
+  "id": "123",
+  "meta": {
+    "profile": [
+      "http://hl7.org/fhir/StructureDefinition/Condition"
+    ]
+  },
   "code": {
     "coding": [
       {

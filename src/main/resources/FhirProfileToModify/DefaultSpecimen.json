@@ -1,5 +1,11 @@
 {
   "resourceType": "Specimen",
+  "id": "123",
+  "meta": {
+    "profile": [
+      "http://hl7.org/fhir/StructureDefinition/Specimen"
+    ]
+  },
   "status": "available",
   "type": {
     "coding": [

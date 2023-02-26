@@ -2,18 +2,23 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.fhirpath.FhirPathExecutionException;
 import ca.uhn.fhir.parser.IParser;
 import java.beans.IntrospectionException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.Consent;
 import org.hl7.fhir.r4.model.Enumeration;
 import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Procedure;
+import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Specimen;
 
 
@@ -23,13 +28,13 @@ public class FhirResourceFactory {
   private static final IParser parser = ctx.newJsonParser().setPrettyPrint(true);
 
 
-  public static <T extends IBaseResource> T createTestResource(Class<T> resourceType,
+  public static <T extends IBaseResource> List<IBaseResource> createTestResource(
+      Class<T> resourceType,
       String resourceToModifyPath, HashMap<String, String> fhirPathToValueFunction)
       throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
     var json = new String(Files.readAllBytes(Paths.get(resourceToModifyPath)));
     var resource = parser.parseResource(resourceType, json);
-    modifyResource(ctx, resource, fhirPathToValueFunction);
-    return resource;
+    return modifyResource(ctx, resource, fhirPathToValueFunction);
   }
 
   public static void printResource(IBaseResource resource) {
@@ -40,34 +45,33 @@ public class FhirResourceFactory {
     }
   }
 
-  @SuppressWarnings("unchecked")
-  public static <T extends IBaseResource> T createTestResourceFromBluePrint(
+  public static List<IBaseResource> createTestResourceFromBluePrint(
       HashMap<String, String> bluePrint) {
     String resourceName = BluePrintLoader.getResourceName(bluePrint);
     try {
       switch (resourceName) {
         case "Condition":
-          return (T) createTestResource(Condition.class,
+          return createTestResource(Condition.class,
               "src/main/resources/FhirProfileToModify/DefaultCondition.json", bluePrint);
         case "Consent":
-          return (T) createTestResource(Consent.class,
+          return createTestResource(Consent.class,
               "src/main/resources/FhirProfileToModify/DefaultConsent.json", bluePrint);
         case "Observation":
           if (bluePrint.containsKey("Observation.value as Quantity")) {
-            return (T) createTestResource(Observation.class,
+            return createTestResource(Observation.class,
                 "src/main/resources/FhirProfileToModify/DefaultQuantityObservation.json",
                 bluePrint);
           } else if (bluePrint.containsKey("(Observation.value as CodeableConcept).coding")) {
-            return (T) createTestResource(Observation.class,
+            return createTestResource(Observation.class,
                 "src/main/resources/FhirProfileToModify/DefaultCodeableConceptObservation.json",
                 bluePrint);
           }
           break;
         case "Procedure":
-          return (T) createTestResource(Procedure.class,
+          return createTestResource(Procedure.class,
               "src/main/resources/FhirProfileToModify/DefaultProcedure.json", bluePrint);
         case "Specimen":
-          return (T) createTestResource(Specimen.class,
+          return createTestResource(Specimen.class,
               "src/main/resources/FhirProfileToModify/DefaultSpecimen.json", bluePrint);
 
       }
@@ -86,11 +90,14 @@ public class FhirResourceFactory {
    * @param fhirPathToValueFunction map of fhirPath to valueFunction
    * @param <T>                     type of resource
    */
-  public static <T extends IBase> void modifyResource(FhirContext ctx, T resource,
+  public static <T extends IBase> List<IBaseResource> modifyResource(FhirContext ctx, T resource,
       HashMap<String, String> fhirPathToValueFunction)
       throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    List<IBaseResource> resultingResources = new java.util.ArrayList<>(List.of());
     for (var entry : fhirPathToValueFunction.entrySet()) {
       var fhirPath = entry.getKey();
+
+
       var valueFunction = entry.getValue();
       JavaFunctionParser.FunctionResult result = JavaFunctionParser.parse(valueFunction);
       if (result == null) {
@@ -99,9 +106,20 @@ public class FhirResourceFactory {
       }
       var valueType = result.return_type();
       var value = result.result();
+
+      if (valueType == ResourceReferenceContainer.class) {
+        extractResource(value).ifPresent(referencedResource ->
+            resultingResources.add((IBaseResource) referencedResource));
+        value = ((ResourceReferenceContainer<?>) value).reference();
+        valueType = Reference.class;
+      }
+
       try {
         var evalResult = ctx.newFhirPath().evaluateFirst(resource, fhirPath, valueType);
-        evalResult.ifPresentOrElse(old_value -> FhirResourceFactory.updateObject(old_value, value),
+        Object finalValue = value;
+
+        evalResult.ifPresentOrElse(old_value -> FhirResourceFactory.updateObject(old_value,
+                finalValue),
             () -> {
               System.out.println("No value found for " + fhirPath);
 //              throw new RuntimeException("No value found for " + fhirPath);
@@ -110,8 +128,20 @@ public class FhirResourceFactory {
         if (fhirPath.endsWith(".status")) {
           handleStatus(resource, fhirPath, value);
         }
+        else {
+          e.printStackTrace();
+        }
       }
     }
+    resultingResources.add((IBaseResource) resource);
+    return resultingResources;
+  }
+
+  private static Optional<Object> extractResource(Object value) {
+    if (value instanceof ResourceReferenceContainer) {
+      return Optional.ofNullable(((ResourceReferenceContainer<?>) value).resource());
+    }
+    return Optional.empty();
   }
 
   /**
@@ -165,7 +195,7 @@ public class FhirResourceFactory {
    */
   public static <T> void updateObject(T target, T source) {
     if (target == null || source == null || !target.getClass().equals(source.getClass())) {
-      // Handle null input or different class types
+      System.out.println("Invalid arguments");
       return;
     }
 
@@ -186,6 +216,15 @@ public class FhirResourceFactory {
     } catch (IntrospectionException | IllegalAccessException | InvocationTargetException e) {
       e.printStackTrace();
       // Handle exception
+    }
+  }
+
+  public static void writeBundle(Bundle bundle, String filename) {
+    try (FileWriter writer = new FileWriter(filename + ".json") ) {
+      String encoded = parser.setPrettyPrint(true).encodeResourceToString(bundle);
+      writer.write(encoded);
+    } catch (IOException e) {
+      e.printStackTrace();
     }
   }
 }

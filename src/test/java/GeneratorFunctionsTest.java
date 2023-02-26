@@ -72,7 +72,8 @@ public class GeneratorFunctionsTest {
   public void testRandomPatientReference() {
     var patientReference = GeneratorFunctions.randomPatientReference();
     assertNotNull(patientReference);
-    assertNotNull(patientReference.getReference());
+    assertNotNull(patientReference.reference());
+    assertNotNull(patientReference.resource());
   }
 
   @Test
@@ -107,6 +108,13 @@ public class GeneratorFunctionsTest {
   }
 
   @Test
+  public void testFixedCanonical() {
+    var canonical = GeneratorFunctions.fixedCanonical("http://hl7.org/fhir/ValueSet/iso3166-1-2");
+    assertNotNull(canonical);
+    assertNotNull(canonical.getValue());
+  }
+
+  @Test
   public void testRandomPeriod() {
     var period = GeneratorFunctions.randomPeriod();
     assertNotNull(period);
@@ -125,7 +133,8 @@ public class GeneratorFunctionsTest {
   public void testRandomOrganizationReference() {
     var organizationReference = GeneratorFunctions.randomOrganizationReference();
     assertNotNull(organizationReference);
-    assertNotNull(organizationReference.getReference());
+    assertNotNull(organizationReference.reference());
+    assertNotNull(organizationReference.resource());
   }
 
   @Test
