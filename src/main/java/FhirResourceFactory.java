@@ -249,8 +249,7 @@ public class FhirResourceFactory {
   public static Parameters createParameters(HashMap<String, String> fileNameByType) {
     List<ParametersParameterComponent> parameterList = new ArrayList<>();
     for (String resourceType : fileNameByType.keySet()) {
-      String typeFilename = String.format("%s", fileNameByType.get(resourceType),
-          resourceType);
+      String typeFilename = String.format("%s", fileNameByType.get(resourceType));
       String fileUrl = String.format("file:///%s", typeFilename);
       ParametersParameterComponent parameter = new ParametersParameterComponent();
       parameter.setName("source");
