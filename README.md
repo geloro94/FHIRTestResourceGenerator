@@ -77,4 +77,48 @@ The program utalizes:
 - https://github.com/hapifhir/hapi-fhir for FHIR Resource parsing and evaluating FHIR Path expressions.
 
 
+### Application Example
+
+```java
+  public static void main(String[] args) {
+    var bluePrints = BluePrintLoader.loadBluePrints(
+    "src/main/resources/BluePrint/TestDataResourceBluePrint.json");
+    var resources = bluePrints.stream().map(FhirResourceFactory::createTestResourceFromBluePrint)
+    .filter(Objects::nonNull).flatMap(
+    Collection::stream)
+    .toList();
+    var bundle = FhirTransactionBundleConverter.convertToFhirTransactionBundle(resources);
+    FhirResourceFactory.writeResource(bundle, "src/main/resources/Bundle/GeneratedBundle.json");
+    var params = FhirResourceFactory.writeNDJsonByResourceType(resources,
+    "src/main/resources/NDJson/test_resources");
+    FhirResourceFactory.writeResource(params,
+    "src/main/resources/Parameters/GeneratedParameters.json");
+    }
+```
+
+#### Upload to FHIR Server
+In Application.java you can find an example of how to use the program.
+Based on the BluePrints the test resources are generated.
+You can convert them two a FHIR Transaction Bundle to upload them to Standard FHIR Server like
+[Hapi](https://github.com/hapifhir/hapi-fhir) or [blaze](https://github.com/samply/blaze).
+
+#### Upload to [Pathling](https://github.com/aehrc/pathling)
+To upload the generated resources to Pathling we need to create a NDJSON file for each resource type.
+writeNDJsonByResourceType does exactly that. And returns a Parameter Resource that can be used to 
+import the resources into Pathling. Using pathlings .../fhir/$import operation.
+Make sure you mount the generated NDJSON files into the pathling container and eventually update
+the valueUrl in the Parameter Resource to match the path of the mounted files.
+
+```json
+"parameter": [ {
+    "name": "source",
+    "part": [ {
+      "name": "resourceType",
+      "valueCode": "Condition"
+    }, {
+      "name": "url",
+      "valueUrl": "file:///src/main/resources/NDJson/test_resources-Condition.ndjson"
+    } ]
+  }
+```
 

@@ -17,7 +17,6 @@ public class Application {
         "src/main/resources/NDJson/test_resources");
     FhirResourceFactory.writeResource(params,
         "src/main/resources/Parameters/GeneratedParameters.json");
-
   }
 
 }
