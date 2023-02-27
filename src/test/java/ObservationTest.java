@@ -98,7 +98,7 @@ public class ObservationTest {
         .toList();
     var bundle = FhirTransactionBundleConverter.convertToFhirTransactionBundle(
         observations);
-    FhirResourceFactory.writeBundle(bundle, "src/main/resources/Bundle/observationBundle.json");
+    FhirResourceFactory.writeResource(bundle, "src/main/resources/Bundle/observationBundle.json");
     var endTime = System.currentTimeMillis();
     var elapsedTime = endTime - startTime;
 

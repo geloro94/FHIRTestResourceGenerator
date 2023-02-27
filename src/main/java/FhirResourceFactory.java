@@ -11,18 +11,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.CodeType;
 import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.Consent;
 import org.hl7.fhir.r4.model.Enumeration;
 import org.hl7.fhir.r4.model.Observation;
+import org.hl7.fhir.r4.model.Parameters;
+import org.hl7.fhir.r4.model.Parameters.ParametersParameterComponent;
 import org.hl7.fhir.r4.model.Procedure;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.Specimen;
+import org.hl7.fhir.r4.model.UrlType;
 
 
 public class FhirResourceFactory {
@@ -220,9 +224,9 @@ public class FhirResourceFactory {
     }
   }
 
-  public static void writeBundle(Bundle bundle, String filename) {
+  public static <T extends IBaseResource> void writeResource(T resource, String filename) {
     try (FileWriter writer = new FileWriter(filename, false)) {
-      String encoded = parser.setPrettyPrint(true).encodeResourceToString(bundle);
+      String encoded = parser.setPrettyPrint(true).encodeResourceToString(resource);
       writer.write(encoded);
     } catch (IOException e) {
       e.printStackTrace();
@@ -240,5 +244,43 @@ public class FhirResourceFactory {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  public static Parameters createParameters(HashMap<String, String> fileNameByType) {
+    List<ParametersParameterComponent> parameterList = new ArrayList<>();
+    for (String resourceType : fileNameByType.keySet()) {
+      String typeFilename = String.format("%s", fileNameByType.get(resourceType),
+          resourceType);
+      String fileUrl = String.format("file:///%s", typeFilename);
+      ParametersParameterComponent parameter = new ParametersParameterComponent();
+      parameter.setName("source");
+      parameter.addPart().setName("resourceType").setValue(new CodeType(resourceType));
+      parameter.addPart().setName("url").setValue(new UrlType(fileUrl));
+      parameterList.add(parameter);
+    }
+    Parameters parameters = new Parameters();
+    parameters.setParameter(parameterList);
+
+    return parameters;
+  }
+
+  public static Parameters writeNDJsonByResourceType(List<IBaseResource> resources,
+      String filename) {
+    Map<String, List<IBaseResource>> resourcesByType = new HashMap<>();
+    for (IBaseResource resource : resources) {
+      String resourceType = resource.fhirType();
+      List<IBaseResource> typeResources = resourcesByType.getOrDefault(resourceType,
+          new ArrayList<>());
+      typeResources.add(resource);
+      resourcesByType.put(resourceType, typeResources);
+    }
+    var fileNameByType = new HashMap<String, String>();
+    for (String resourceType : resourcesByType.keySet()) {
+      String typeFilename = String.format("%s-%s.ndjson", filename, resourceType);
+      fileNameByType.put(resourceType, typeFilename);
+      List<IBaseResource> typeResources = resourcesByType.get(resourceType);
+      writeNDJson(typeResources, typeFilename);
+    }
+    return createParameters(fileNameByType);
   }
 }

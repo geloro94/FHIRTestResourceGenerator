@@ -12,8 +12,11 @@ public class Application {
             Collection::stream)
         .toList();
     var bundle = FhirTransactionBundleConverter.convertToFhirTransactionBundle(resources);
-    FhirResourceFactory.writeBundle(bundle, "src/main/resources/Bundle/GeneratedBundle.json");
-    FhirResourceFactory.writeNDJson(resources, "src/main/resources/NDJson/resources.ndjson");
+    FhirResourceFactory.writeResource(bundle, "src/main/resources/Bundle/GeneratedBundle.json");
+    var params = FhirResourceFactory.writeNDJsonByResourceType(resources,
+        "src/main/resources/NDJson/test_resources");
+    FhirResourceFactory.writeResource(params,
+        "src/main/resources/Parameters/GeneratedParameters.json");
 
   }
 
