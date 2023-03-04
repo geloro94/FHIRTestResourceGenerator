@@ -11634,7 +11634,8 @@
         "MedicationAdministration.id": "randomID()",
         "MedicationAdministration.status": "randomCode(http://hl7.org/fhir/ValueSet/medication-admin-status|4.0.1)",
         "MedicationAdministration.medication as Reference": "randomMedicationReference()",
-        "MedicationAdministration.effective as dateTime": "randomDateTime()"
+        "MedicationAdministration.effective as dateTime": "randomDateTime()",
+        "MedicationAdministration.subject": "randomPatientReference()"
     },
     {
         "Medication.meta.profile": "fixedCanonical(https://www.medizininformatik-initiative.de/fhir/core/modul-medikation/StructureDefinition/Medication)",

@@ -32,6 +32,7 @@ import org.hl7.fhir.r4.model.Enumerations.AdministrativeGender;
 import org.hl7.fhir.r4.model.HumanName;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier;
+import org.hl7.fhir.r4.model.Medication;
 import org.hl7.fhir.r4.model.Meta;
 import org.hl7.fhir.r4.model.Organization;
 import org.hl7.fhir.r4.model.Parameters;
@@ -277,7 +278,8 @@ public class GeneratorFunctions {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
     String randomStartString = randomDateTime.format(formatter) + "+01:00";
     period.setStartElement(new DateTimeType(randomStartString));
-    LocalDateTime randomEndDateTime = randomDateTime.plusDays(ThreadLocalRandom.current().nextInt(1, 365));
+    LocalDateTime randomEndDateTime = randomDateTime.plusDays(
+        ThreadLocalRandom.current().nextInt(1, 365));
     String randomEndString = randomEndDateTime.format(formatter) + "+01:00";
     period.setEndElement(new DateTimeType(randomEndString));
     return period;
@@ -311,6 +313,23 @@ public class GeneratorFunctions {
     reference.setReference("Organization/" + organization.getIdElement().getIdPart());
     reference.setDisplay(organization.getName());
     return ResourceReferenceContainer.of(organization, reference);
+  }
+
+  public static Medication randomMedication() {
+    Medication medication = new Medication();
+    medication.setId(UUID.randomUUID().toString());
+    medication.setCode(
+        new CodeableConcept().addCoding(randomCoding("http://fhir.de/ValueSet/bfarm/atc")));
+    medication.setStatus(Medication.MedicationStatus.ACTIVE);
+    return medication;
+  }
+
+  public static ResourceReferenceContainer randomMedicationReference() {
+    var medication = randomMedication();
+    Reference reference = new Reference();
+    reference.setReference("Medication/" + medication.getIdElement().getIdPart());
+    reference.setDisplay(medication.getCode().getCodingFirstRep().getDisplay());
+    return ResourceReferenceContainer.of(medication, reference);
   }
 
   /**

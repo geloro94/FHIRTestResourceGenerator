@@ -1,0 +1,17 @@
+{
+  "resourceType": "MedicationAdministration",
+  "meta": {
+    "profile": [
+      "https://www.medizininformatik-initiative.de/fhir/core/modul-medikation/StructureDefinition/MedicationAdministration"
+    ]
+  },
+  "id": "abc123",
+  "status": "in-progress",
+  "medicationReference": {
+    "reference": "Medication/med123"
+  },
+  "effectiveDateTime": "2023-03-04T10:30:00+00:00",
+  "subject": {
+    "reference": "Patient/pat456"
+  }
+}

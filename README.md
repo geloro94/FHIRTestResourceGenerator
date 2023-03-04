@@ -19,7 +19,7 @@ FhirResourceFactory.loadFhirPathToValueFunctionFromJson function. Use the
 FhirResourceFactory.modifyResource function to modify the loaded resource based on the Blueprint
 FHIR Defintions. GeneratorFunctions provides the defintion of available functions to create the
 value defined by the fhir path key in the BluePrint. If you have many different profiles i.e.
-because you have a seperat profile for each LaboratoryValue with its own specific ucum code. You
+because you have a separate profile for each LaboratoryValue with its own specific ucum code. You
 want to generate the TestDataBluePrint based on the Profile Information or other sources. While the
 values might change for each profile the required FHIR Resource you want to modify want need to be
 changed for each case as long as all but also only the fhir path you want to have in your final

@@ -19,6 +19,7 @@ import org.hl7.fhir.r4.model.CodeType;
 import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.Consent;
 import org.hl7.fhir.r4.model.Enumeration;
+import org.hl7.fhir.r4.model.MedicationAdministration;
 import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Parameters;
 import org.hl7.fhir.r4.model.Parameters.ParametersParameterComponent;
@@ -83,6 +84,10 @@ public class FhirResourceFactory {
         case "Patient":
           return createTestResource(org.hl7.fhir.r4.model.Patient.class,
               "src/main/resources/FhirProfileToModify/DefaultPatient.json", bluePrint);
+        case "MedicationAdministration":
+          return createTestResource(MedicationAdministration.class,
+              "src/main/resources/FhirProfileToModify/DefaultMedicationAdministration.json",
+              bluePrint);
 
       }
     } catch (IOException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
