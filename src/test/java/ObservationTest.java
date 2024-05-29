@@ -56,7 +56,7 @@ public class ObservationTest {
     var fhirPathToValueFunction = BluePrintLoader.loadFhirPathToValueFunctionFromJson(
         Path.of("src/main/resources/TestDataBluePrint/AldostroneObservationBluePrint.json"));
 
-    var observation = FhirResourceFactory.createTestResource(Observation.class,
+    var observation = FhirResourceFactory.createModifiedTestResource(Observation.class,
         "src/main/resources/FhirProfileToModify/DefaultQuantityObservation.json",
         fhirPathToValueFunction);
     System.out.println(parser.setPrettyPrint(true).encodeResourceToString(

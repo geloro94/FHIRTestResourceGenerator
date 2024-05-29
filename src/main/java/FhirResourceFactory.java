@@ -35,8 +35,19 @@ public class FhirResourceFactory {
   private static final FhirContext ctx = FhirContext.forR4();
   private static final IParser parser = ctx.newJsonParser().setPrettyPrint(true);
 
+  public static <T extends IBaseResource> IBaseResource createTestResource(
+    Class<T> resourceType,
+    String resourceToModifyPath)
+    throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+      var json = new String(Files.readAllBytes(Paths.get(resourceToModifyPath)));
+      var resource = parser.parseResource(resourceType, json);
+      return resource;
+    }
 
-  public static <T extends IBaseResource> List<IBaseResource> createTestResource(
+
+  
+
+  public static <T extends IBaseResource> List<IBaseResource> createModifiedTestResource(
       Class<T> resourceType,
       String resourceToModifyPath, HashMap<String, String> fhirPathToValueFunction)
       throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
@@ -59,33 +70,33 @@ public class FhirResourceFactory {
     try {
       switch (resourceName) {
         case "Condition":
-          return createTestResource(Condition.class,
+          return createModifiedTestResource(Condition.class,
               "src/main/resources/FhirProfileToModify/DefaultCondition.json", bluePrint);
         case "Consent":
-          return createTestResource(Consent.class,
+          return createModifiedTestResource(Consent.class,
               "src/main/resources/FhirProfileToModify/DefaultConsent.json", bluePrint);
         case "Observation":
           if (bluePrint.containsKey("Observation.value as Quantity")) {
-            return createTestResource(Observation.class,
+            return createModifiedTestResource(Observation.class,
                 "src/main/resources/FhirProfileToModify/DefaultQuantityObservation.json",
                 bluePrint);
           } else if (bluePrint.containsKey("(Observation.value as CodeableConcept).coding")) {
-            return createTestResource(Observation.class,
+            return createModifiedTestResource(Observation.class,
                 "src/main/resources/FhirProfileToModify/DefaultCodeableConceptObservation.json",
                 bluePrint);
           }
           break;
         case "Procedure":
-          return createTestResource(Procedure.class,
+          return createModifiedTestResource(Procedure.class,
               "src/main/resources/FhirProfileToModify/DefaultProcedure.json", bluePrint);
         case "Specimen":
-          return createTestResource(Specimen.class,
+          return createModifiedTestResource(Specimen.class,
               "src/main/resources/FhirProfileToModify/DefaultSpecimen.json", bluePrint);
         case "Patient":
-          return createTestResource(org.hl7.fhir.r4.model.Patient.class,
+          return createModifiedTestResource(org.hl7.fhir.r4.model.Patient.class,
               "src/main/resources/FhirProfileToModify/DefaultPatient.json", bluePrint);
         case "MedicationAdministration":
-          return createTestResource(MedicationAdministration.class,
+          return createModifiedTestResource(MedicationAdministration.class,
               "src/main/resources/FhirProfileToModify/DefaultMedicationAdministration.json",
               bluePrint);
 
